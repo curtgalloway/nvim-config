@@ -1,47 +1,92 @@
 return {
-  'neovim/nvim-lspconfig',
-  event = 'VeryLazy',
+  "neovim/nvim-lspconfig",
+  event = "VeryLazy",
   dependencies = {
-    { 'williamboman/mason.nvim' },
-    { 'williamboman/mason-lspconfig.nvim' },
-    { 'WhoIsSethDaniel/mason-tool-installer.nvim' },
-    { 'folke/neodev.nvim' },
+    { "williamboman/mason.nvim" },
+    { "williamboman/mason-lspconfig.nvim" },
+    { "WhoIsSethDaniel/mason-tool-installer.nvim" },
+    { "folke/neodev.nvim" },
   },
   config = function()
-    require('mason').setup()
+    require("mason").setup()
+    require("neodev").setup({})
 
-    local lspconfig = require('lspconfig')
-    local caps = require('cmp_nvim_lsp').default_capabilities()
+    -- Capabilities (use nvim-cmp if present)
+    local capabilities = vim.lsp.protocol.make_client_capabilities()
+    pcall(function()
+      capabilities = require("cmp_nvim_lsp").default_capabilities(capabilities)
+    end)
 
-    -- Configure all servers via mason-lspconfig handlers  
-    require('mason-lspconfig').setup({
+    -- Helper: safely load a server's default_config from lspconfig
+    local function lspconfig_default(server_name)
+      -- This require returns a module with .default_config
+      local ok, mod = pcall(require, "lspconfig.server_configurations." .. server_name)
+      if ok and type(mod) == "table" and mod.default_config then
+        return vim.deepcopy(mod.default_config)
+      end
+      -- Fallback empty config if unknown
+      return {}
+    end
+
+    -- Define a server on the new API and autostart it by filetype
+    local function define_server(server_name, overrides)
+      local base = lspconfig_default(server_name)
+      local cfg = vim.tbl_deep_extend("force", base, overrides or {})
+      -- ensure capabilities are applied unless explicitly overridden
+      cfg.capabilities = cfg.capabilities or capabilities
+
+      vim.lsp.config[server_name] = cfg
+
+      local fts = cfg.filetypes or {}
+      if #fts > 0 then
+        vim.api.nvim_create_autocmd("FileType", {
+          group = vim.api.nvim_create_augroup("lsp_autostart_" .. server_name, { clear = true }),
+          pattern = fts,
+          callback = function(args)
+            -- avoid duplicating a client on the same buffer
+            local active = vim.lsp.get_clients({ bufnr = args.buf, name = server_name })
+            if #active == 0 then
+              vim.lsp.start(vim.lsp.config[server_name])
+            end
+          end,
+        })
+      end
+    end
+
+    -- Install LSP servers via Mason
+    require("mason-lspconfig").setup({
       ensure_installed = {
-        'bashls','cssls','html','gradle_ls','groovyls','lua_ls',
-        'jsonls','lemminx','marksman','quick_lint_js','yamlls',
-        -- jdtls excluded - managed separately via ftplugin
+        "bashls","cssls","html","gradle_ls","groovyls","lua_ls",
+        "jsonls","lemminx","marksman","quick_lint_js","yamlls",
+        -- jdtls excluded – configured separately via ftplugin
       },
+      automatic_installation = true,
       handlers = {
-        -- Default handler for all servers
+        -- default: define every installed server with our capabilities
         function(server_name)
-          lspconfig[server_name].setup({
-            capabilities = caps,
+          define_server(server_name, {})
+        end,
+
+        -- lua_ls with your tweaks
+        ["lua_ls"] = function()
+          define_server("lua_ls", {
+            settings = {
+              Lua = {
+                diagnostics = { globals = { "vim" } },
+                workspace = { checkThirdParty = false },
+              },
+            },
           })
         end,
-        -- No jdtls handler needed since it's not in ensure_installed
       },
     })
 
-    -- Manually install jdtls via mason but don't configure it
-    require('mason-tool-installer').setup({
-      ensure_installed = {
-        'jdtls', -- Install but don't configure
-      },
+    -- Install tools that we don't configure here (e.g., jdtls)
+    require("mason-tool-installer").setup({
+      ensure_installed = { "jdtls" },
+      auto_update = false,
+      run_on_start = false,
     })
-
-    -- Optional lua tweaks
-    lspconfig.lua_ls.setup({
-      capabilities = caps,
-      settings = { Lua = { diagnostics = { globals = { 'vim' } } } },
-    })
-  end
+  end,
 }
+
