@@ -125,6 +125,7 @@ end)
 
 --added by chatgpt 2025 08 28
 
+-- doesn't seem to work...
 keymap.set("n", "<leader>tmc", function()
   if vim.bo.filetype == 'java' then
     require('jdtls').pick_java_main_class()

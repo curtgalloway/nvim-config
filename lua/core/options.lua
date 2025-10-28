@@ -8,11 +8,11 @@ opt.relativenumber = true
 opt.number = true
 
 -- Tabs & Indentation
-opt.tabstop = 2
-opt.shiftwidth = 2
+opt.tabstop = 4
+opt.shiftwidth = 4
 opt.expandtab = true
 opt.autoindent = true
-vim.bo.softtabstop = 2
+vim.bo.softtabstop = 4
 
 -- Line Wrapping
 opt.wrap = false
