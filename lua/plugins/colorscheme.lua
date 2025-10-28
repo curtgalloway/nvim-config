@@ -10,7 +10,7 @@ return {
     transparent = true,
     background = {
       -- light = "lotus",
-      dark = "wave", -- "wave, dragon"
+      dark = "dragon", -- "wave, dragon"
     },
     colors = {
       palette = {
@@ -81,8 +81,8 @@ return {
 
     -- Custom border colors
     vim.cmd([[
-      hi NormalFloat guifg=#F9E7C0 guibg=#1F1F1F
-      hi FloatBorder guifg=#F9E7C0 guibg=#1F1F1F
+      hi NormalFloat guifg=#F9E7C0 guibg=NONE
+      hi FloatBorder guifg=#F9E7C0 guibg=NONE
     ]])
   end
 }
