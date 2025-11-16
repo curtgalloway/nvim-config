@@ -87,6 +87,15 @@ return {
       auto_update = false,
       run_on_start = false,
     })
+
+    -- Explicitly disable lspconfig's auto-setup for jdtls
+    -- We handle jdtls entirely in ftplugin/java.lua
+    -- Set it to a minimal config with no filetypes so it never auto-starts
+    vim.lsp.config.jdtls = {
+      cmd = { 'jdtls' }, -- dummy, won't be used
+      filetypes = {}, -- empty = never auto-start
+      root_markers = {},
+    }
   end,
 }
 

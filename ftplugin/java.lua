@@ -8,18 +8,15 @@ if not root_dir then
   return
 end
 
--- Ensure only the good server remains (kill any plain "jdtls")
-local function ensure_single_jdtls()
-  for _, c in ipairs(vim.lsp.get_clients()) do
-    if c.name == 'jdtls' then
-      local cmd0 = (c.config and c.config.cmd and c.config.cmd[1]) or ''
-      if cmd0 == 'jdtls' then
-        c.stop(true) -- kill rogue plain binary
-      end
-    end
-  end
+-- Get current buffer
+local bufnr = vim.api.nvim_get_current_buf()
+
+-- Check if jdtls is already attached to this specific buffer
+local existing_clients = vim.lsp.get_clients({ bufnr = bufnr, name = 'jdtls' })
+if #existing_clients > 0 then
+  -- Already attached to this buffer, don't attach again
+  return
 end
-ensure_single_jdtls()
 
 -- Workspace & launcher
 local project   = vim.fn.fnamemodify(root_dir, ':t')
@@ -51,7 +48,7 @@ end
 local caps = require('cmp_nvim_lsp').default_capabilities()
 
 -- Start OR attach
-jdtls.start_or_attach({
+local client_id = jdtls.start_or_attach({
   cmd = {
     'java',
     '-Declipse.application=org.eclipse.jdt.ls.core.id1',
@@ -78,13 +75,35 @@ jdtls.start_or_attach({
       },
     },
   },
-  on_attach = function()
+  on_attach = function(client, buffer)
+    -- Setup DAP
     jdtls.setup_dap({ hotcodereplace = 'auto' })
     require('jdtls.dap').setup_dap_main_class_configs()
+
+    -- Setup codelens
     vim.api.nvim_create_autocmd({ 'BufWritePost', 'CursorHold', 'InsertLeave' }, {
-      buffer = 0,
-      group = vim.api.nvim_create_augroup('jdtls_codelens', { clear = true }),
-      callback = function() pcall(vim.lsp.codelens.refresh) end,
+      buffer = buffer,
+      group = vim.api.nvim_create_augroup('jdtls_codelens_' .. buffer, { clear = true }),
+      callback = function()
+        pcall(vim.lsp.codelens.refresh)
+      end,
     })
+
+    -- Trigger initial codelens refresh
+    vim.defer_fn(function()
+      pcall(vim.lsp.codelens.refresh, { bufnr = buffer })
+    end, 500)
   end,
 })
+
+-- nvim-jdtls sometimes doesn't attach the client automatically
+-- Check after a short delay and manually attach if needed
+if client_id then
+  vim.defer_fn(function()
+    local attached_clients = vim.lsp.get_clients({ bufnr = bufnr, name = 'jdtls' })
+    if #attached_clients == 0 then
+      -- Manually attach the client to the buffer
+      vim.lsp.buf_attach_client(bufnr, client_id)
+    end
+  end, 500)
+end
