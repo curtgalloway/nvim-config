@@ -12,7 +12,7 @@ opt.tabstop = 4
 opt.shiftwidth = 4
 opt.expandtab = true
 opt.autoindent = true
-vim.bo.softtabstop = 4
+opt.softtabstop = 4
 
 -- Line Wrapping
 opt.wrap = false
@@ -20,6 +20,7 @@ opt.wrap = false
 -- Search Settings
 opt.ignorecase = true
 opt.smartcase = true
+opt.hlsearch = true
 
 -- Cursor Line
 opt.cursorline = true
@@ -52,5 +53,10 @@ opt.mouse = ""
 -- Folding
 opt.foldlevel = 20
 opt.foldmethod = "expr"
-opt.foldexpr = "nvim_treesitter#foldexpr()" -- Utilize Treesitter folds
+opt.foldexpr = "v:lua.vim.treesitter.foldexpr()" -- Utilize Treesitter folds
+
+-- Quality of Life
+opt.undofile = true -- Persistent undo
+opt.updatetime = 250 -- Faster CursorHold events
+opt.scrolloff = 8 -- Keep 8 lines visible above/below cursor
 

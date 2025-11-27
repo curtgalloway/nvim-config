@@ -4,12 +4,13 @@ vim.g.mapleader = " "
 local keymap = vim.keymap
 
 -- General keymaps
-keymap.set("i", "jk", "<ESC>") -- exit insert mode with jk 
+keymap.set("i", "jk", "<ESC>") -- exit insert mode with jk
 keymap.set("i", "ii", "<ESC>") -- exit insert mode with ii
 keymap.set("n", "<leader>wq", ":wq<CR>") -- save and quit
 keymap.set("n", "<leader>qq", ":q!<CR>") -- quit without saving
 keymap.set("n", "<leader>ww", ":w<CR>") -- save
 keymap.set("n", "gx", ":!open <c-r><c-a><CR>") -- open URL under cursor
+keymap.set("n", "<leader>nh", ":nohl<CR>") -- clear search highlights
 
 -- Split window management
 keymap.set("n", "<leader>sv", "<C-w>v") -- split window vertically
@@ -18,8 +19,8 @@ keymap.set("n", "<leader>se", "<C-w>=") -- make split windows equal width
 keymap.set("n", "<leader>sx", ":close<CR>") -- close split window
 keymap.set("n", "<leader>sj", "<C-w>-") -- make split window height shorter
 keymap.set("n", "<leader>sk", "<C-w>+") -- make split windows height taller
-keymap.set("n", "<leader>sl", "<C-w>>5") -- make split windows width bigger 
-keymap.set("n", "<leader>sh", "<C-w><5") -- make split windows width smaller
+keymap.set("n", "<leader>sl", "<C-w>>5") -- make split windows width bigger
+keymap.set("n", "<leader>sH", "<C-w><5") -- make split windows width smaller
 
 -- Tab management
 keymap.set("n", "<leader>to", ":tabnew<CR>") -- open a new tab
@@ -97,6 +98,7 @@ keymap.set('n', '<leader>gp', '<cmd>lua vim.diagnostic.goto_prev()<CR>')
 keymap.set('n', '<leader>gn', '<cmd>lua vim.diagnostic.goto_next()<CR>')
 keymap.set('n', '<leader>tr', '<cmd>lua vim.lsp.buf.document_symbol()<CR>')
 keymap.set('i', '<C-Space>', '<cmd>lua vim.lsp.buf.completion()<CR>')
+keymap.set('n', '<leader>gh', '<cmd>lua vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled())<CR>') -- toggle inlay hints
 
 -- Filetype-specific keymaps (these can be done in the ftplugin directory instead if you prefer)
 keymap.set("n", '<leader>go', function()

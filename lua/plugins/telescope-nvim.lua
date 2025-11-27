@@ -23,5 +23,10 @@ return {
         }
       }
     }
-  }
+  },
+  config = function(_, opts)
+    require('telescope').setup(opts)
+    -- Load fzf extension for better performance
+    pcall(require('telescope').load_extension, 'fzf')
+  end
 }
