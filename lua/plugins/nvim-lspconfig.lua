@@ -64,11 +64,30 @@ return {
       end
     end
 
+    -- Helper: detect project type
+    local function detect_project_type(bufnr)
+      local root = vim.fs.root(bufnr or 0, {'.git', 'package.json'})
+      if not root then return nil end
+      
+      local package_json = root .. '/package.json'
+      if vim.fn.filereadable(package_json) == 1 then
+        local content = vim.fn.readfile(package_json)
+        local json_str = table.concat(content, '\n')
+        if json_str:match('"@angular/') then
+          return 'angular'
+        elseif json_str:match('"react"') then
+          return 'react'
+        end
+      end
+      return nil
+    end
+
     -- Install LSP servers via Mason
     require("mason-lspconfig").setup({
       ensure_installed = {
         "bashls","cssls","html","gradle_ls","groovyls","lua_ls",
         "jsonls","lemminx","marksman","quick_lint_js","yamlls",
+        "angularls","ts_ls",
         -- jdtls excluded – configured separately via ftplugin
       },
       automatic_installation = true,
@@ -89,6 +108,10 @@ return {
             },
           })
         end,
+
+        -- Skip auto-setup for angularls and ts_ls - we handle them conditionally
+        ["angularls"] = function() end,
+        ["ts_ls"] = function() end,
       },
     })
 
@@ -107,6 +130,24 @@ return {
       filetypes = {}, -- empty = never auto-start
       root_markers = {},
     }
+
+    -- Conditional TypeScript LSP based on project type
+    define_server("angularls", {})
+    define_server("ts_ls", {})
+    
+    vim.api.nvim_create_autocmd("FileType", {
+      group = vim.api.nvim_create_augroup("lsp_typescript_conditional", { clear = true }),
+      pattern = { "typescript", "typescriptreact" },
+      callback = function(args)
+        local project_type = detect_project_type(args.buf)
+        local server_name = project_type == 'angular' and 'angularls' or 'ts_ls'
+        
+        local active = vim.lsp.get_clients({ bufnr = args.buf, name = server_name })
+        if #active == 0 then
+          vim.lsp.start(vim.lsp.config[server_name])
+        end
+      end,
+    })
   end,
 }
 
