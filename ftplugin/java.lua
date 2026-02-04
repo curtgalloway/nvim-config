@@ -37,15 +37,23 @@ local dbg = vim.fn.glob(vim.env.HOME .. '/.local/share/nvim/mason/share/java-deb
 if dbg ~= '' then table.insert(bundles, dbg) end
 vim.list_extend(bundles, vim.fn.glob(vim.env.HOME .. '/.local/share/nvim/mason/share/java-test/*.jar', 1, 1))
 
--- Java runtime configuration
-local java_runtime_path = vim.env.JAVA_21_HOME or '/home/cgalloway/Downloads/amazon-corretto-21.0.1.12.1-linux-x64/'
+-- Java runtime configuration (cross-platform)
+local java_runtime_path = vim.env.JAVA_21_HOME or vim.env.JAVA_HOME
 local java_runtimes = {}
-if vim.fn.isdirectory(java_runtime_path) == 1 then
+if java_runtime_path and vim.fn.isdirectory(java_runtime_path) == 1 then
   table.insert(java_runtimes, { name = 'JavaSE-21', path = java_runtime_path })
 end
 
 -- Capabilities
 local caps = require('cmp_nvim_lsp').default_capabilities()
+
+-- Detect platform for jdtls configuration
+local config_dir = 'config_linux'
+if vim.fn.has('mac') == 1 then
+  config_dir = 'config_mac'
+elseif vim.fn.has('win32') == 1 then
+  config_dir = 'config_win'
+end
 
 -- Start OR attach
 local client_id = jdtls.start_or_attach({
@@ -60,7 +68,7 @@ local client_id = jdtls.start_or_attach({
     '--add-opens','java.base/java.util=ALL-UNNAMED',
     '--add-opens','java.base/java.lang=ALL-UNNAMED',
     '-jar', launcher,
-    '-configuration', vim.env.HOME .. '/.local/share/nvim/mason/packages/jdtls/config_linux',
+    '-configuration', vim.env.HOME .. '/.local/share/nvim/mason/packages/jdtls/' .. config_dir,
     '-data', workspace,
   },
   root_dir = root_dir,
@@ -80,19 +88,19 @@ local client_id = jdtls.start_or_attach({
     jdtls.setup_dap({ hotcodereplace = 'auto' })
     require('jdtls.dap').setup_dap_main_class_configs()
 
-    -- Setup codelens
-    vim.api.nvim_create_autocmd({ 'BufWritePost', 'CursorHold', 'InsertLeave' }, {
-      buffer = buffer,
-      group = vim.api.nvim_create_augroup('jdtls_codelens_' .. buffer, { clear = true }),
-      callback = function()
-        pcall(vim.lsp.codelens.refresh)
-      end,
-    })
-
-    -- Trigger initial codelens refresh
-    vim.defer_fn(function()
-      pcall(vim.lsp.codelens.refresh, { bufnr = buffer })
-    end, 500)
+    -- Java-specific keybindings
+    vim.keymap.set('n', '<leader>di', "<Cmd>lua require'jdtls'.organize_imports()<CR>",
+      { buffer = buffer, desc = 'Organize Imports' })
+    vim.keymap.set('n', '<leader>dt', "<Cmd>lua require'jdtls'.test_class()<CR>",
+      { buffer = buffer, desc = 'Test Class' })
+    vim.keymap.set('n', '<leader>dn', "<Cmd>lua require'jdtls'.test_nearest_method()<CR>",
+      { buffer = buffer, desc = 'Test Nearest Method' })
+    vim.keymap.set('n', '<leader>de', "<Cmd>lua require'jdtls'.extract_variable()<CR>",
+      { buffer = buffer, desc = 'Extract Variable' })
+    vim.keymap.set('v', '<leader>de', "<Esc><Cmd>lua require'jdtls'.extract_variable(true)<CR>",
+      { buffer = buffer, desc = 'Extract Variable' })
+    vim.keymap.set('v', '<leader>dm', "<Esc><Cmd>lua require'jdtls'.extract_method(true)<CR>",
+      { buffer = buffer, desc = 'Extract Method' })
   end,
 })
 
