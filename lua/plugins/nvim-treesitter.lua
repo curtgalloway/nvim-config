@@ -1,33 +1,42 @@
--- Code Tree Support / Syntax Highlighting
 return {
   -- https://github.com/nvim-treesitter/nvim-treesitter
-  'nvim-treesitter/nvim-treesitter',
-  event = 'VeryLazy',
+  "nvim-treesitter/nvim-treesitter",
+  branch = "master", -- IMPORTANT: keep legacy API
+  build = ":TSUpdate",
+
+  -- Load before things like Telescope use it
+  event = { "BufReadPost", "BufNewFile" },
+
   dependencies = {
-    -- https://github.com/nvim-treesitter/nvim-treesitter-textobjects
-    'nvim-treesitter/nvim-treesitter-textobjects',
+    "nvim-treesitter/nvim-treesitter-textobjects",
   },
-  build = ':TSUpdate',
+
   opts = {
     highlight = {
       enable = true,
     },
-    indent = { enable = true },
-    auto_install = true, -- automatically install syntax support when entering new file type buffer
-    ensure_installed = {
-      'lua',
-      'java',
-      'comment',
-      'typescript',
-      'tsx',      -- Needed if you ever work with JSX or TSX
-      'html',
-      'css',
-      'json',
-      'markdown',
-      'bash',
-      'yaml',
-      'xml',
+
+    indent = {
+      enable = true,
     },
+
+    auto_install = true,
+
+    ensure_installed = {
+      "lua",
+      "java",
+      "comment",
+      "typescript",
+      "tsx",
+      "html",
+      "css",
+      "json",
+      "markdown",
+      "bash",
+      "yaml",
+      "xml",
+    },
+
     incremental_selection = {
       enable = true,
       keymaps = {
@@ -38,9 +47,8 @@ return {
       },
     },
   },
-  config = function (_, opts)
-    local configs = require("nvim-treesitter.configs")
-    configs.setup(opts)
-  end
-}
 
+  config = function(_, opts)
+    require("nvim-treesitter.configs").setup(opts)
+  end,
+}
