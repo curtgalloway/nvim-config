@@ -1,0 +1,21 @@
+# Plugins (lazy.nvim / packer)
+lazy-lock.json
+lazy/
+packer_compiled.lua
+plugin/packer_compiled.lua
+
+# Mason (LSP servers, etc.)
+mason/
+.mason/
+
+# Cache / temp
+*.log
+*.tmp
+.cache/
+shada/
+swap/
+backup/
+undo/
+
+# OS junk
+.DS_Store
