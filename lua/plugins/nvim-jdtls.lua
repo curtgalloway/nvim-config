@@ -1,5 +1,5 @@
 -- Loader only. All startup logic lives in ftplugin/java.lua
-return { 
+return {
   'mfussenegger/nvim-jdtls', 
   ft = { 'java' },
   config = function()
@@ -7,4 +7,3 @@ return {
     -- This prevents nvim-jdtls from creating its own LSP configuration
   end
 }
-
