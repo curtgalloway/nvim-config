@@ -5,11 +5,10 @@ return {
     { "williamboman/mason.nvim" },
     { "williamboman/mason-lspconfig.nvim" },
     { "WhoIsSethDaniel/mason-tool-installer.nvim" },
-    { "folke/neodev.nvim" },
+    { "folke/lazydev.nvim", ft = "lua", opts = {} },
   },
   config = function()
     require("mason").setup()
-    require("neodev").setup({})
 
     -- Enable inlay hints globally if supported
     vim.api.nvim_create_autocmd("LspAttach", {
